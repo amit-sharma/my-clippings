@@ -1,23 +1,17 @@
 #!/bin/bash
 
-# If our kindle is plugged in, let's grap clippings from it
-if [[ -f "/media/`whoami`/Kindle/documents/My Clippings.txt" ]]
-then
-  input="/media/`whoami`/Kindle/documents/My Clippings.txt"
-
-# Otherwise look for clippings in the current dir
-else
-  input="My Clippings.txt"
-fi
+input="$1/My Clippings.txt"
 
 # Move $output to a temporary read location so we can 
 #   write to this filename at the other end of our pipe
-output="my-clippings.txt"
-if [[ -f "$output" ]]; then mv "$output" ".$output.backup"
+output="$1/my-clippings.txt"
+output_backup="$1/.my-clippings.backup"
+touch $output_backup
+if [[ -f "$output" ]]; then mv "$output" "$output_backup"
 fi
 
 # Send our input and old output into the pipe
-cat "$input" ".$output.backup" |\
+cat "$input" "$output_backup" |\
 
 # Remove byte order markers
 sed 's/^\xef\xbb\xbf//' |\
@@ -49,11 +43,11 @@ sed 's/- Your/\n- Your/'           \
 
 # Remove our old output if everything went well
 if [[ -f "$output" ]]; then
-  rm ".$output.backup"
+    rm "$output_backup"
 
 # Reverting changes makes debugging cleaner
 else
   echo "Expected output not generated, reverting changes.."
-  mv ".$output.backup" "$output"
+  mv "$output_backup" "$output"
 fi
 
